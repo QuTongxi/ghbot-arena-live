@@ -1,0 +1,32 @@
+name: PR-Agent comment command
+on:
+  issue_comment:
+    types: [created]
+permissions:
+  contents: read
+jobs:
+  review:
+    # Only run on PR comments that start with /review. This is the external
+    # comment-command entry point under evaluation.
+    if: ${{ github.event.issue.pull_request && startsWith(github.event.comment.body, '/review') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - name: PR-Agent command
+        uses: docker://pragent/pr-agent@sha256:8f1df6fa8a98e7d24be30d9b80208a927b30b5bfac88a7ae1fe24c68b47b3f08
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          OPENAI.KEY: ${{ secrets.ARENA_MODEL_KEY }}
+          OPENAI.API_BASE: https://ws-g3hawr3flya8qoxe.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
+          config.model: openai/qwen3.8-flash
+          config.fallback_models: '[]'
+          config.temperature: '0'
+          config.custom_model_max_tokens: '128000'
+          config.num_retries: '0'
+          github_action_config.auto_review: 'false'
+          github_action_config.auto_describe: 'false'
+          github_action_config.auto_improve: 'false'
